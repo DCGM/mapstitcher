@@ -20,6 +20,8 @@ from libs.homography import *
 
 import matplotlib.pyplot as plt
 
+import tifffile
+
 class ImageStitcher:
     def __init__(self, subsample=1.0, flow_alg='cv', vram=8.0, debug=False, silent=False):
         #self.optical_flow = OpticalFlow_RAFT()
@@ -219,7 +221,7 @@ class ImageStitcher:
                     
                     # upsample flow
                     if subsample > 0.0 and subsample != 1.0:
-                        flow = cv2.resize(flow, (overlap1.shape[1], overlap1.shape[0]), interpolation=cv2.INTER_NEAREST)
+                        flow = cv2.resize(flow, (overlap1.shape[1], overlap1.shape[0]), interpolation=cv2.INTER_LINEAR)
                         flow = flow * subsample
 
                     flow = flow.transpose(2, 0, 1)
@@ -240,7 +242,7 @@ class ImageStitcher:
 
                 # upsample flow
                 if subsample > 0.0 and subsample != 1.0:
-                    flow = cv2.resize(flow, (overlap1.shape[1], overlap1.shape[0]), interpolation=cv2.INTER_NEAREST)
+                    flow = cv2.resize(flow, (overlap1.shape[1], overlap1.shape[0]), interpolation=cv2.INTER_LINEAR)
                     flow = flow * subsample
                 
                 flow = flow.transpose(2, 0, 1)
@@ -557,7 +559,10 @@ if '__main__' == __name__:
     # saving as JP2, convert to TIFF first and call opj_compress
     if suffix == 'jp2':
         tif_path = f'{prefix}_tmp.tif'
-        cv2.imwrite(tif_path, (result_canvas * 255.0).astype(np.uint8))
+        #cv2.imwrite(tif_path, (result_canvas * 255.0).astype(np.uint8))
+        # 
+        rgb_image = cv2.cvtColor((result_canvas * 255.0).astype(np.uint8), cv2.COLOR_BGR2RGB)
+        tifffile.imwrite(tif_path, rgb_image, bigtiff=True)
 
         cmd = [
             'opj_compress',
@@ -579,5 +584,8 @@ if '__main__' == __name__:
         except subprocess.CalledProcessError as e:
             print(f"Error: opj_compress failed with exit code {e.returncode}")
             raise
+    elif suffix == 'tif' or suffix == 'tiff':
+        rgb_image = cv2.cvtColor((result_canvas * 255.0).astype(np.uint8), cv2.COLOR_BGR2RGB)
+        tifffile.imwrite(args.output, rgb_image, bigtiff=True)
     else:
         cv2.imwrite(args.output, (result_canvas * 255.0).astype(np.uint8))
