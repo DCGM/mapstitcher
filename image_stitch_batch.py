@@ -300,7 +300,7 @@ def parse_folder(path, silent=False):
     image_files = []
     for root, dirs, files in os.walk(path):
         for file in files:
-            if file.endswith(('.jpg', '.png', '.tiff', '.jp2')):
+            if file.endswith(('.jpg', '.png', '.tiff', '.jp2', '.tif')):
                 image_files.append(os.path.join(root, file))
     if not silent:
         print(f"Found {len(image_files)} images in {path}")
